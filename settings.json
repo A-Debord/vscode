@@ -1,0 +1,21 @@
+{
+    "editor.multiCursorModifier": "ctrlCmd",
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "editor.suggest.localityBonus": true,
+    "window.zoomLevel": 0,
+    "clipboard-manager.snippet.enabled": false,
+    "remote.SSH.path": "D:\\Softwares\\Programs\\Git\\usr\\bin\\ssh.exe",
+    "remote.SSH.remotePlatform": {
+        "plexus": "linux"
+    },
+    "python.linting.mypyEnabled": true,
+    "C_Cpp.updateChannel": "Insiders",
+    "extensions.ignoreRecommendations": false,
+    "[cpp]": {
+        "editor.defaultFormatter": "ms-vscode.cpptools"
+    },
+    "C/C++ Include Guard.Macro Type": "Filename",
+    "C/C++ Include Guard.Remove Extension": false,
+    "C_Cpp.intelliSenseEngine": "Disabled"
+}

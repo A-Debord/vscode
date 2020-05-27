@@ -1,0 +1,1977 @@
+{
+  "version": 2,
+  "clips": [
+    {
+      "value": "this->m_owner->getContext()->findLinkDest(ptr,",
+      "createdAt": 1590561536862,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 116,
+            "character": 12
+          },
+          "end": {
+            "line": 116,
+            "character": 58
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/SingleLink.h"
+      }
+    },
+    {
+      "value": "m_owner->getContext()->findLinkDest(ptr,",
+      "createdAt": 1590561486833,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 308,
+            "character": 12
+          },
+          "end": {
+            "line": 308,
+            "character": 52
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Link.h"
+      }
+    },
+    {
+      "value": "\r\n\r\nBaseData* Base::findDataLinkDest(data_link link) const {\r\n    std::string value = link.str();\r\n\r\n    const auto resolve = [=](const data_link& datalink) {\r\n        if(auto target = this->resolve(datalink.path())) {\r\n            if(auto parent = target->findData(datalink.data())) {\r\n                return parent;\r\n            }\r\n            throw std::runtime_error(\"data not found: \" + helper::quote(datalink.str()));\r\n        }\r\n        throw std::runtime_error(\"data owner not found: \" + helper::quote(datalink.path()));\r\n    };\r\n\r\n    if(sofa::strict()) {\r\n        return resolve(link);\r\n    } else {\r\n        //group in one deprecated message\r\n        std::stringstream err;\r\n        const auto print_err = [&](){\r\n            if(err.rdbuf()->in_avail()!=0){\r\n                deprecated(bad_link,this,err.str());\r\n            }\r\n        };\r\n\r\n        std::string path = value.c_str() + 1;\r\n        const std::size_t tries = 16;\r\n        for(std::size_t i = 0; i < tries; ++i) {\r\n            try {\r\n                auto data = resolve(data_link(value[0]+path));\r\n                print_err();\r\n                return data;\r\n            } catch(std::runtime_error& e) {\r\n                path = \"../\" + path;\r\n                \r\n                if(i!=0){err << std::endl;}\r\n                err << e.what() << std::endl\r\n                    << \"trying \" + helper::quote(path);\r\n            }\r\n        }\r\n\r\n        print_err();\r\n        throw std::runtime_error(\"resolution error\");\r\n    }\r\n}",
+      "createdAt": 1590561363259,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 438,
+            "character": 0
+          },
+          "end": {
+            "line": 438,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.cpp"
+      }
+    },
+    {
+      "value": "\r\n    // resolve data link target. throw std::runtime_error if not found,\r\n    // otherwise a valid pointer.\r\n    BaseData* findDataLinkDest(data_link dest) const;\r\n\r\nprivate:\r\n    static constexpr char const* bad_link = \"bad_link\";\r\npublic:\r\n\r\n    // resolve object from its path. return nullptr if not found;\r\n    virtual sptr<Base> resolve(const char* path) const = 0;\r\n\r\n    // resolve() + allow to target a node while asking for its mechanical state\r\n    // should disappear one day getting replaced by resolve\r\n    template<class T>\r\n    T* findLinkDest(link dest) const {\r\n        // note : cannot move it to simulation::Node because ObjectFactory uses Context\r\n        // note : cannot move it to Context because BaseData::m_owner is a Base, no way to get a Context\r\n\r\n        auto value = dest.str();\r\n\r\n        auto bobj = resolve(dest.path());\r\n        T* obj = dynamic_cast<T*>(bobj.get());\r\n        if(obj) {\r\n            assert(fuzzy_find<T>(dest) == obj); //we find the same stuff with both methods\r\n            return obj;\r\n        }\r\n\r\n        // old wanky way of finding stuff\r\n        T* fuzzy_obj = fuzzy_find<T>(dest);\r\n\r\n\r\n        if(fuzzy_obj) {\r\n            std::stringstream ss;\r\n\r\n            ss << \"could not find a \" << T::GetClass()->className << \" at \" << helper::quote(dest.path())\r\n               << \" but found one here \" << helper::quote(fuzzy_obj->getPathName());\r\n            deprecated(bad_link, this, ss.str());\r\n            if(sofa::strict()) {\r\n                throw std::runtime_error(ss.str());\r\n            }\r\n            return fuzzy_obj;\r\n        }\r\n\r\n        return nullptr;\r\n    }\r\n\r\n    // convenience/fixup\r\n    template<class T>\r\n    bool findLinkDest(T*& out, link dest) const {\r\n        out = this->findLinkDest<T>(std::move(dest));\r\n        return bool(out);\r\n    }\r\n\r\n    template<class T>\r\n    T* fuzzy_find(link dest) const{\r\n        void* result = findLinkDestClass(T::GetClass(), dest);\r\n        return reinterpret_cast<T*>(result);\r\n    }\r\n\r\n    // find a link matching this class TODO separate lookup from typecheck lol\r\n    // DEPRECATED\r\n    virtual void* findLinkDestClass(const BaseClass* destType,const link& dest) const = 0;\r\n",
+      "createdAt": 1590561148129,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 283,
+            "character": 0
+          },
+          "end": {
+            "line": 283,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.h"
+      }
+    },
+    {
+      "value": "Context* BaseObject::getContext() const {\r\n    // slaves get their context from their master\r\n    if(auto master = getMaster()) {\r\n        assert(master != this);\r\n        return master->getContext();\r\n    }\r\n\r\n    // note: we *should* assert the following, but of course this breaks the\r\n    // whole test suite :/\r\n\r\n    // assert(context);\r\n    return context;\r\n}",
+      "createdAt": 1590560616281,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 206,
+            "character": 1
+          },
+          "end": {
+            "line": 206,
+            "character": 1
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/BaseObject.cpp"
+      }
+    },
+    {
+      "value": "\r\n    virtual Context* getContext() final;",
+      "createdAt": 1590560510205,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 150,
+            "character": 0
+          },
+          "end": {
+            "line": 151,
+            "character": 40
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/BaseObject.h"
+      }
+    },
+    {
+      "value": "\r\n    virtual Context* getContext() final {return this;};",
+      "createdAt": 1590560441146,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 205,
+            "character": 0
+          },
+          "end": {
+            "line": 206,
+            "character": 55
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Context.h"
+      }
+    },
+    {
+      "value": "\r\n    virtual Context* getContext() const = 0;",
+      "createdAt": 1590560224016,
+      "copyCount": 1,
+      "useCount": 0,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 281,
+            "character": 0
+          },
+          "end": {
+            "line": 281,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.h"
+      }
+    },
+    {
+      "value": "FLAG_DOUBLELINK",
+      "createdAt": 1590399409907,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 58,
+            "character": 32
+          },
+          "end": {
+            "line": 58,
+            "character": 32
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/BaseLink.h"
+      }
+    },
+    {
+      "value": "template findLinkDest<DestType>",
+      "createdAt": 1590399282841,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 71,
+            "character": 41
+          },
+          "end": {
+            "line": 71,
+            "character": 72
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/MultiLink.h"
+      }
+    },
+    {
+      "value": "DestType",
+      "createdAt": 1590399243818,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 306,
+            "character": 8
+          },
+          "end": {
+            "line": 306,
+            "character": 16
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Link.h"
+      }
+    },
+    {
+      "value": "this->m_owner",
+      "createdAt": 1590397449810,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 116,
+            "character": 47
+          },
+          "end": {
+            "line": 116,
+            "character": 47
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/SingleLink.h"
+      }
+    },
+    {
+      "value": "/home/adrien/dev/sofa/sub/src/interne/sofa/ContactMapping/ContactMapping/examples/ProjectionToTopologyMapping_registration.py",
+      "createdAt": 1590397092102,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "python",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 0
+          },
+          "end": {
+            "line": 0,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/ContactMapping/ContactMapping/examples/ProjectionToTopologyMapping_registration.py"
+      }
+    },
+    {
+      "value": "LinkedInstanceAttribute",
+      "createdAt": 1590391325998,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 61,
+            "character": 22
+          },
+          "end": {
+            "line": 61,
+            "character": 45
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/appframework/sofaqt/plugins/SofaQt/src/SofaQt/sofa/InstanceAttribute.h"
+      }
+    },
+    {
+      "value": "core::objectmodel::",
+      "createdAt": 1590391416047,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 66,
+            "character": 10
+          },
+          "end": {
+            "line": 66,
+            "character": 29
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/appframework/sofaqt/plugins/SofaQt/src/SofaQt/sofa/InstanceAttribute.h"
+      }
+    },
+    {
+      "value": "setUpdateCallback",
+      "createdAt": 1589984936920,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 98,
+            "character": 13
+          },
+          "end": {
+            "line": 98,
+            "character": 30
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/appframework/sofaqt/plugins/SofaQt/src/SofaQt/sofa/InstanceAttribute.cpp"
+      }
+    },
+    {
+      "value": "fuzzy_find<T>(dest)",
+      "createdAt": 1589984614220,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 310,
+            "character": 23
+          },
+          "end": {
+            "line": 310,
+            "character": 42
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.h"
+      }
+    },
+    {
+      "value": "attr->repr()",
+      "createdAt": 1589984286506,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 249,
+            "character": 24
+          },
+          "end": {
+            "line": 249,
+            "character": 36
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "        if(auto attr = arg->get(attrname)){\r\n            auto repr = attr->repr();\r\n            arg->removeAttribute(attrname);\r\n            arg->set(attrname,state_from_node<T>(context, repr));\r\n        }",
+      "createdAt": 1589983782640,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 243,
+            "character": 0
+          },
+          "end": {
+            "line": 247,
+            "character": 9
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "private:\r\n    template<class T>\r\n    static void overwrite(objectmodel::Context* context,\r\n                                       objectmodel::BaseObjectDescription* arg,\r\n                                       const char* attrname){\r\n        if(auto attr = arg->get(attrname)){\r\n            arg->removeAttribute(attrname);\r\n            arg->set(attrname,state_from_node<T>(context, attr->repr()));\r\n        }\r\n    }\r\npublic:",
+      "createdAt": 1589983437901,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 252,
+            "character": 0
+          },
+          "end": {
+            "line": 262,
+            "character": 7
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Multi2Mapping.h"
+      }
+    },
+    {
+      "value": "private:\r\n    template<class T>\r\n    static void overwrite(objectmodel::Context* context,\r\n                                       objectmodel::BaseObjectDescription* arg,\r\n                                       const char* attrname){\r\n        if(arg->get(attrname)){\r\n            arg->removeAttribute(attrname);\r\n            arg->set(attrname,state_from_node<T>(context, attrname));\r\n        }\r\n    }\r\npublic:",
+      "createdAt": 1589982548247,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 252,
+            "character": 0
+          },
+          "end": {
+            "line": 262,
+            "character": 7
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Multi2Mapping.h"
+      }
+    },
+    {
+      "value": "attrname",
+      "createdAt": 1589977472025,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 250,
+            "character": 50
+          },
+          "end": {
+            "line": 250,
+            "character": 58
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "        if(arg->get(\"input1\")){\r\n            arg->removeAttribute(\"input1\");\r\n            arg->set(\"input1\",state_from_node<In1>(context, \"input1\"));\r\n        }",
+      "createdAt": 1589982473203,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 264,
+            "character": 0
+          },
+          "end": {
+            "line": 267,
+            "character": 9
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Multi2Mapping.h"
+      }
+    },
+    {
+      "value": "objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg",
+      "createdAt": 1589982447186,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 257,
+            "character": 43
+          },
+          "end": {
+            "line": 258,
+            "character": 74
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Multi2Mapping.h"
+      }
+    },
+    {
+      "value": "\r\n        arg->removeAttribute(\"input\");\r\n        arg->set(\"input\",state_from_node<In>(context, \"input\"));",
+      "createdAt": 1589982344118,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 249,
+            "character": 0
+          },
+          "end": {
+            "line": 251,
+            "character": 64
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "        arg->removeAttribute(\"input\");\r\n        arg->set(\"input\",state_from_node<In>(context, \"input\"));\r\n",
+      "createdAt": 1589982316096,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 250,
+            "character": 0
+          },
+          "end": {
+            "line": 252,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "std::string",
+      "createdAt": 1589978335115,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 234,
+            "character": 8
+          },
+          "end": {
+            "line": 234,
+            "character": 19
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "\r\n                        arg->removeAttribute(attrname);\r\n                        arg->set(attrname,(link.str()[0] + typed_state->getPathName()).c_str());",
+      "createdAt": 1589982068433,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 263,
+            "character": 74
+          },
+          "end": {
+            "line": 265,
+            "character": 96
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "    template<class T> \r\n    static void state_from_node(objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg,const char * attrname) {\r\n        if(auto attr = arg->get(attrname)) {\r\n            helper::link link = attr->repr();\r\n\r\n            objectmodel::Context *node;\r\n            context->resolve(node, link.path());\r\n            if(node){\r\n                if(auto state = node->getState()){\r\n                    if(auto typed_state = dynamic_cast<State<T>*>(state)){\r\n                        arg->removeAttribute(attrname);\r\n                        arg->set(attrname,(link.str()[0] + typed_state->getPathName()).c_str());\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }",
+      "createdAt": 1589981975864,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 249,
+            "character": 5
+          },
+          "end": {
+            "line": 249,
+            "character": 5
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "    template<class T>\r\n    static typename T::SPtr create(T* tag, objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg) {\r\n        state_from_node<In1>(context, arg, \"input1\");\r\n        state_from_node<In2>(context, arg, \"input2\");\r\n        state_from_node<Out>(context, arg, \"output\");\r\n\r\n        auto obj = core::objectmodel::BaseObject::create(tag, context, arg);\r\n\r\n        return obj;\r\n    }",
+      "createdAt": 1589981876798,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 252,
+            "character": 0
+          },
+          "end": {
+            "line": 262,
+            "character": 5
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Multi2Mapping.h"
+      }
+    },
+    {
+      "value": "    template<class T>\r\n    static typename T::SPtr create(T* tag, objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg) {\r\n        if(!arg->get(\"input\")){arg->set(\"input\",\"@../\");}\r\n        if(!arg->get(\"output\")){arg->set(\"output\",\"@./\");}\r\n\r\n        infer_path<In>(context, arg, \"input\");\r\n        infer_path<Out>(context, arg, \"output\");\r\n\r\n        auto obj = core::objectmodel::BaseObject::create(tag, context, arg);\r\n\r\n        return obj;\r\n    }",
+      "createdAt": 1589981805260,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 244,
+            "character": 0
+          },
+          "end": {
+            "line": 256,
+            "character": 5
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "    template<class T>\r\n    static typename T::SPtr create(T* tag, objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg) {",
+      "createdAt": 1589981801258,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 244,
+            "character": 0
+          },
+          "end": {
+            "line": 246,
+            "character": 77
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "(link.str()[0] + typed_state->getPathName()).c_str()",
+      "createdAt": 1589981626151,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 243,
+            "character": 52
+          },
+          "end": {
+            "line": 243,
+            "character": 104
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "        arg->removeAttribute(attrname);\r\n        arg->set(attrname,value);",
+      "createdAt": 1589981613646,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 249,
+            "character": 0
+          },
+          "end": {
+            "line": 250,
+            "character": 33
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "/home/adrien/dev/sofa/sub/tutorials/12_distance_to_mesh_ContactMapping/02_projection_to_topology_mapping.py",
+      "createdAt": 1589980100930,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "jsonc",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 7,
+            "character": 3
+          },
+          "end": {
+            "line": 7,
+            "character": 3
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/.vscode/launch.json"
+      }
+    },
+    {
+      "value": "                    if(auto typed_state = dynamic_cast<State<T>*>(state)){\r\n",
+      "createdAt": 1589978793930,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 240,
+            "character": 64
+          },
+          "end": {
+            "line": 240,
+            "character": 64
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": " static void infer_path(objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg",
+      "createdAt": 1589978207541,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 231,
+            "character": 3
+          },
+          "end": {
+            "line": 232,
+            "character": 74
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "tstate",
+      "createdAt": 1589977916366,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 244,
+            "character": 24
+          },
+          "end": {
+            "line": 244,
+            "character": 30
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "\r\n    template<class T> ",
+      "createdAt": 1589977535568,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 221,
+            "character": 0
+          },
+          "end": {
+            "line": 222,
+            "character": 22
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/BaseMapping.h"
+      }
+    },
+    {
+      "value": "    static typename T::SPtr create(T* tag, objectmodel::Context* context,\r\n                                   objectmodel::BaseObjectDescription* arg) {\r\n\r\n        assert(arg);\r\n\r\n        const auto infer_path = [context,arg](const char* attrname){\r\n            std::string inPath;\r\n            if(auto input = arg->get(attrname)) {\r\n                inPath = input->repr();\r\n            } else {\r\n                inPath = \"@../\";\r\n            }\r\n            simulation::Node *node;\r\n            context->resolve(node, inPath);\r\n            if(node){\r\n                if(auto state = node->getMechanicalState()){\r\n                    arg->removeAttribute(attrname);\r\n                    arg->set(attrname,state->getPathName());\r\n                }\r\n            }\r\n        };",
+      "createdAt": 1589977523558,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 245,
+            "character": 0
+          },
+          "end": {
+            "line": 265,
+            "character": 10
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "auto state = node->getMechanicalState()",
+      "createdAt": 1589977266901,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 257,
+            "character": 18
+          },
+          "end": {
+            "line": 257,
+            "character": 18
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "            std::string inPath, outPath;\r\n            if(auto input = arg->get(\"input\")) {\r\n                inPath = input->repr();\r\n            } else {\r\n                inPath = \"@../\";\r\n            }",
+      "createdAt": 1589977033764,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 254,
+            "character": 0
+          },
+          "end": {
+            "line": 259,
+            "character": 13
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/Mapping.h"
+      }
+    },
+    {
+      "value": "createObject",
+      "createdAt": 1589976991745,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 122,
+            "character": 45
+          },
+          "end": {
+            "line": 122,
+            "character": 57
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/ObjectFactory.cpp"
+      }
+    },
+    {
+      "value": "createInstance",
+      "createdAt": 1589976975730,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 201,
+            "character": 34
+          },
+          "end": {
+            "line": 201,
+            "character": 48
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/ObjectFactory.h"
+      }
+    },
+    {
+      "value": "\r\n    as::mod::to_grey grey;",
+      "createdAt": 1589896559523,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 117,
+            "character": 22
+          },
+          "end": {
+            "line": 117,
+            "character": 22
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "grey.out().array()",
+      "createdAt": 1589895990500,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 156,
+            "character": 29
+          },
+          "end": {
+            "line": 156,
+            "character": 47
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "\r\n            grey.update(color);",
+      "createdAt": 1589894891084,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 126,
+            "character": 36
+          },
+          "end": {
+            "line": 126,
+            "character": 36
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "build-debug",
+      "createdAt": 1589894525289,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "jsonc",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 22
+          },
+          "end": {
+            "line": 13,
+            "character": 33
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/.vscode/tasks.json"
+      }
+    },
+    {
+      "value": "\r\n        {\r\n            \"label\": \"build-release\",\r\n            \"type\": \"shell\",\r\n            \"command\": \"make release\",\r\n            \"group\": {\r\n                \"kind\": \"build\",\r\n                \"isDefault\": true\r\n            }\r\n        },",
+      "createdAt": 1589894466762,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "jsonc",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 11,
+            "character": 10
+          },
+          "end": {
+            "line": 11,
+            "character": 10
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/.vscode/tasks.json"
+      }
+    },
+    {
+      "value": "as::ref<std::vector<SurfelElement>",
+      "createdAt": 1589894030884,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 17,
+            "character": 54
+          },
+          "end": {
+            "line": 17,
+            "character": 88
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/display.cpp"
+      }
+    },
+    {
+      "value": "                // {\r\n                //     \"description\": \"Enable all-exceptions\",\r\n                //     \"text\": \"catch throw std::runtime_error\",\r\n                //     \"ignoreFailures\": true\r\n                // }",
+      "createdAt": 1589892776964,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "jsonc",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 30,
+            "character": 0
+          },
+          "end": {
+            "line": 34,
+            "character": 20
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/.vscode/launch.json"
+      }
+    },
+    {
+      "value": " pipeline(run, display, argv[1]);",
+      "createdAt": 1589892468064,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 189,
+            "character": 47
+          },
+          "end": {
+            "line": 189,
+            "character": 80
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "\r\n    return std::thread([=, &run, &display] {",
+      "createdAt": 1589892390498,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 82,
+            "character": 0
+          },
+          "end": {
+            "line": 82,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "${workspaceFolder}/",
+      "createdAt": 1589460965781,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "jsonc",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 13,
+            "character": 20
+          },
+          "end": {
+            "line": 13,
+            "character": 39
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/.vscode/launch.json"
+      }
+    },
+    {
+      "value": "color",
+      "createdAt": 1589889003654,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 25,
+            "character": 10
+          },
+          "end": {
+            "line": 25,
+            "character": 15
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/elements.h"
+      }
+    },
+    {
+      "value": "points_data",
+      "createdAt": 1589888768465,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 26,
+            "character": 7
+          },
+          "end": {
+            "line": 26,
+            "character": 18
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/gui/entity.hpp"
+      }
+    },
+    {
+      "value": "\r\n    void foreachVertices(std::function<void(const as::vec3f&)> f) const{\r\n      for(size_t i=0;i<vertices.size();i+=3){\r\n        f(Eigen::Map<const as::vec3f>(vertices.data()+i));\r\n      }\r\n    }\r\n\r\n    void append(const mesh_data& data){\r\n      se3 dt = t.inv()*data.t;\r\n\r\n      size_t index_offset = vertices.size()/3;\r\n\r\n      data.foreachVertices([this,&dt](const as::vec3f vec){\r\n        as::vec3f v = dt * vec;\r\n        vertices.push_back(v.x());\r\n        vertices.push_back(v.y());\r\n        vertices.push_back(v.z());\r\n      });\r\n\r\n      for(uint trig : data.triangles){\r\n        triangles.push_back(trig+index_offset);\r\n      }\r\n\r\n      if(color.size()==1){color = }\r\n    }",
+      "createdAt": 1589888735936,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 23,
+            "character": 0
+          },
+          "end": {
+            "line": 23,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/gui/entity.hpp"
+      }
+    },
+    {
+      "value": "\r\n    void surfels_changed(as::ref<std::vector<SurfelElement>> surfels);",
+      "createdAt": 1589887484977,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 41,
+            "character": 96
+          },
+          "end": {
+            "line": 42,
+            "character": 70
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/display.hpp"
+      }
+    },
+    {
+      "value": "SurfelElement",
+      "createdAt": 1589887468461,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 7
+          },
+          "end": {
+            "line": 20,
+            "character": 20
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/elements.h"
+      }
+    },
+    {
+      "value": "\r\n                    map.fuse_map(color.array(),depth->array(),transform.matrix(),nframes);",
+      "createdAt": 1589887196732,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 144,
+            "character": 59
+          },
+          "end": {
+            "line": 145,
+            "character": 90
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "uint16_t raw",
+      "createdAt": 1589883689837,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 61,
+            "character": 12
+          },
+          "end": {
+            "line": 61,
+            "character": 24
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "pt",
+      "createdAt": 1589883152894,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 60,
+            "character": 17
+          },
+          "end": {
+            "line": 60,
+            "character": 19
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "dintra.scale()",
+      "createdAt": 1589882771062,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 68,
+            "character": 32
+          },
+          "end": {
+            "line": 68,
+            "character": 32
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "intra",
+      "createdAt": 1589882322715,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 34,
+            "character": 49
+          },
+          "end": {
+            "line": 34,
+            "character": 49
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "stream::properties",
+      "createdAt": 1589882293699,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 35,
+            "character": 8
+          },
+          "end": {
+            "line": 35,
+            "character": 26
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "color_stream",
+      "createdAt": 1589882208645,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 34,
+            "character": 29
+          },
+          "end": {
+            "line": 34,
+            "character": 41
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "as::intrinsics::get(color.stream->properties);",
+      "createdAt": 1589880692971,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 46,
+            "character": 64
+          },
+          "end": {
+            "line": 46,
+            "character": 64
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "color.stream->shape[0],color.stream->shape[1]",
+      "createdAt": 1589881101276,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 45,
+            "character": 29
+          },
+          "end": {
+            "line": 45,
+            "character": 74
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "transform.inv() * pos",
+      "createdAt": 1589881038240,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 43,
+            "character": 40
+          },
+          "end": {
+            "line": 43,
+            "character": 61
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/core/intrinsics.hpp"
+      }
+    },
+    {
+      "value": "unsigned short",
+      "createdAt": 1589880837082,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 236,
+            "character": 32
+          },
+          "end": {
+            "line": 236,
+            "character": 46
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/module/primitives/colorToDepth.cpp"
+      }
+    },
+    {
+      "value": "stream",
+      "createdAt": 1589880600401,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 51,
+            "character": 9
+          },
+          "end": {
+            "line": 51,
+            "character": 15
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "depthstream",
+      "createdAt": 1589880587389,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 20,
+            "character": 4
+          },
+          "end": {
+            "line": 20,
+            "character": 15
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "struct grey_stream : public stream{\r\n    size_t shape[2];\r\n    static const std::string name;\r\n\r\n    grey_stream(const stream& color_stream)\r\n    {\r\n        if ((color_stream.type != as::stream::COLOR)) {\r\n            throw std::runtime_error(\"input frame should be a color frame\");\r\n        }\r\n\r\n        stream::dims=2;\r\n        stream::shape=shape;\r\n        stream::type = stream::GREY;\r\n        stream::format = stream::Y8;\r\n        stream::name = name.c_str();\r\n        stream::fps = color_stream.fps;\r\n        stream::properties = color_stream.properties;\r\n\r\n        shape[0] = color_stream.shape[0];\r\n        shape[1] = color_stream.shape[1];\r\n    }\r\n};",
+      "createdAt": 1589880437275,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 11,
+            "character": 0
+          },
+          "end": {
+            "line": 32,
+            "character": 2
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/module/to_grey.cpp"
+      }
+    },
+    {
+      "value": "grey = std::make_unique<as::frame>(grey_streams[frame.stream], storage->data, frame.timestamp, storage);",
+      "createdAt": 1589880283167,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 54,
+            "character": 4
+          },
+          "end": {
+            "line": 54,
+            "character": 108
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/module/to_grey.cpp"
+      }
+    },
+    {
+      "value": "grey_streams[frame.stream], storage->data, frame.timestamp, storage",
+      "createdAt": 1589880254644,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 54,
+            "character": 39
+          },
+          "end": {
+            "line": 54,
+            "character": 106
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/src/anatoscan/module/to_grey.cpp"
+      }
+    },
+    {
+      "value": "dev->streams()[0]",
+      "createdAt": 1589879544608,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 44,
+            "character": 37
+          },
+          "end": {
+            "line": 44,
+            "character": 37
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/main.cpp"
+      }
+    },
+    {
+      "value": "FusionFunctions fusion_functions",
+      "createdAt": 1589879022700,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 10,
+            "character": 4
+          },
+          "end": {
+            "line": 10,
+            "character": 36
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/surfel_map.h"
+      }
+    },
+    {
+      "value": "\r\n#include \"fusion_functions.h\"",
+      "createdAt": 1589879000680,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 23
+          },
+          "end": {
+            "line": 0,
+            "character": 23
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/surfel_map.cpp"
+      }
+    },
+    {
+      "value": "\r\n    static FusionFunctions fusion_functions;",
+      "createdAt": 1589878993677,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 5,
+            "character": 1
+          },
+          "end": {
+            "line": 5,
+            "character": 1
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/surfel_map.cpp"
+      }
+    },
+    {
+      "value": "\r\n#include <Eigen/Eigen>\r\n#include <opencv2/opencv.hpp>",
+      "createdAt": 1589878493758,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 2,
+            "character": 0
+          },
+          "end": {
+            "line": 4,
+            "character": 29
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/fusion_functions.h"
+      }
+    },
+    {
+      "value": "size_t",
+      "createdAt": 1589878038398,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 846,
+            "character": 13
+          },
+          "end": {
+            "line": 846,
+            "character": 19
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/examples/realtime-visu/fusion_functions.cpp"
+      }
+    },
+    {
+      "value": "orb_results_input",
+      "createdAt": 1589874251429,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 55,
+            "character": 9
+          },
+          "end": {
+            "line": 55,
+            "character": 26
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/src/anatoface/module/surfel_map.h"
+      }
+    },
+    {
+      "value": "image_input",
+      "createdAt": 1589874108853,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 53,
+            "character": 9
+          },
+          "end": {
+            "line": 53,
+            "character": 20
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/src/anatoface/module/surfel_map.h"
+      }
+    },
+    {
+      "value": "https://join.skype.com/invite/gWoiK4HyKYdn",
+      "createdAt": 1589820415890,
+      "copyCount": 1,
+      "useCount": 1
+    },
+    {
+      "value": "",
+      "createdAt": 1589820410888,
+      "copyCount": 1,
+      "useCount": 1
+    },
+    {
+      "value": "93-fix-silent-fail",
+      "createdAt": 1589795968979,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 106,
+            "character": 89
+          },
+          "end": {
+            "line": 106,
+            "character": 89
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/apps/reg-only/main.cpp"
+      }
+    },
+    {
+      "value": "end_of_stream_error",
+      "createdAt": 1589795639227,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 15,
+            "character": 25
+          },
+          "end": {
+            "line": 15,
+            "character": 44
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/extern/anatoscan-sdk/src/anatoscan/core/record.cpp"
+      }
+    },
+    {
+      "value": "dev",
+      "createdAt": 1589793596353,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "makefile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 37,
+            "character": 16
+          },
+          "end": {
+            "line": 37,
+            "character": 19
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/Makefile"
+      }
+    },
+    {
+      "value": "\r\n\trm -f build/dev/CMakeCache.txt",
+      "createdAt": 1589793509285,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "makefile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 40,
+            "character": 24
+          },
+          "end": {
+            "line": 41,
+            "character": 31
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/Makefile"
+      }
+    },
+    {
+      "value": "\r\n\tcmake --build build/release",
+      "createdAt": 1589793490772,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "makefile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 32,
+            "character": 32
+          },
+          "end": {
+            "line": 33,
+            "character": 28
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/Makefile"
+      }
+    },
+    {
+      "value": "\r\n\tmkdir -p build/release;\r\n\tcd build/release && cmake $(MAKEFILE_DIR) $(CMAKE_OPTIONS_RELEASE) -DANATOSCAN_GUI=0 $(CMAKE_OPTIONS)",
+      "createdAt": 1589793391184,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "makefile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 28,
+            "character": 18
+          },
+          "end": {
+            "line": 30,
+            "character": 102
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/Makefile"
+      }
+    },
+    {
+      "value": "reconstructMesh",
+      "createdAt": 1589555595975,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "dockerfile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 16
+          },
+          "end": {
+            "line": 14,
+            "character": 16
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/docker/Dockerfile"
+      }
+    },
+    {
+      "value": "cameraCalibrationData",
+      "createdAt": 1589555049074,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "dockerfile",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 14,
+            "character": 16
+          },
+          "end": {
+            "line": 14,
+            "character": 16
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/sdk/docker/Dockerfile"
+      }
+    },
+    {
+      "value": "registry.gitlab.com/anatoscope/interne/anatoscan/anatoface-server/runtime:latest",
+      "createdAt": 1589536476544,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "yaml",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 42,
+            "character": 9
+          },
+          "end": {
+            "line": 42,
+            "character": 89
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/.gitlab-ci.yml"
+      }
+    },
+    {
+      "value": "\"registry.gitlab.com/anatoscope/interne/anatoscan/sdk:latest\"",
+      "createdAt": 1589536379482,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "yaml",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 1,
+            "character": 9
+          },
+          "end": {
+            "line": 1,
+            "character": 70
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/.gitlab-ci.yml"
+      }
+    },
+    {
+      "value": "\r\n  cloud_segmentation.cpp\r\n  face_segmented_from_depth.cpp",
+      "createdAt": 1589535883631,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cmake",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 9,
+            "character": 39
+          },
+          "end": {
+            "line": 11,
+            "character": 31
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/src/anatoface/module/segmentation/CMakeLists.txt"
+      }
+    },
+    {
+      "value": "anatoface-segmentation",
+      "createdAt": 1589535793579,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cmake",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 0,
+            "character": 8
+          },
+          "end": {
+            "line": 0,
+            "character": 25
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/repos/anatoscan/anatoface-server/registration/src/anatoface/module/meshing/CMakeLists.txt"
+      }
+    },
+    {
+      "value": "\r\n    // resolve object from its path. return nullptr if not found;\r\n    virtual sptr<Base> resolve(const char* path) const = 0;",
+      "createdAt": 1589467184407,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 334,
+            "character": 0
+          },
+          "end": {
+            "line": 334,
+            "character": 0
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.h"
+      }
+    },
+    {
+      "value": "Context",
+      "createdAt": 1589467352526,
+      "copyCount": 2,
+      "useCount": 2,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 215,
+            "character": 23
+          },
+          "end": {
+            "line": 215,
+            "character": 30
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Context.cpp"
+      }
+    },
+    {
+      "value": "\r\n\r\nBaseObject * Base::tryGetState(sptr<Base> bobj){\r\n    Context* node = dynamic_cast<Context*>(bobj.get());\r\n    if(node){return node->getState();}\r\n    return nullptr;\r\n}\r\n\r\nbool Base::isState(const BaseClass* cls){\r\n    return cls->hasParent(core::BaseState::GetClass());\r\n}",
+      "createdAt": 1589467509147,
+      "copyCount": 1,
+      "useCount": 1,
+      "language": "cpp",
+      "createdLocation": {
+        "range": {
+          "start": {
+            "line": 436,
+            "character": 1
+          },
+          "end": {
+            "line": 436,
+            "character": 1
+          }
+        },
+        "uri": "vscode-remote://ssh-remote%2Bplexus/home/adrien/dev/sofa/sub/src/interne/sofa/sofa/kernel/sofa/core/objectmodel/Base.cpp"
+      }
+    }
+  ]
+}
